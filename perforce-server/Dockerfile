@@ -2,8 +2,15 @@ FROM noonien/perforce-base
 LABEL maintainer="George Jiglau <george@mux.ro>"
 
 # Install the perforce server
-RUN apt-get update && apt-get install -y helix-p4d=2018.2-1751184~bionic curl && \
+RUN apt-get update && \
+    apt-get install curl -y && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2019.1-1962178~bionic_amd64.deb -o /tmp/helix-base.deb && \
+    apt-get update && apt install /tmp/helix-base.deb -y && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2019.1-1962178~bionic_amd64.deb -o /tmp/helix.deb && \
+    apt install /tmp/helix.deb -y && \
     # clean temporary files
+    rm /tmp/helix-base.deb && \
+    rm /tmp/helix.deb && \ 
     rm -rf /var/log/* && \
     rm -rf /var/lib/apt/lists/*
 
