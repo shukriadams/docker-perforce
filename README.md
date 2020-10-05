@@ -13,6 +13,8 @@ This creates a fully-functional perforce server with 5 client seats.
 
 ## Setup
 
+See the example docker-compose.yml for how to quickly scaffold up.
+
 You don't need to create a ./data folder, the container will automatically create its own and take it over.
 
 However, you _will_ have to chmod any depot volumes, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
