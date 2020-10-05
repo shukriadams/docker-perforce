@@ -1,0 +1,21 @@
+version: "2"
+services:
+  perforce:
+    image: shukriadams/perforce-server:0.0.2
+    container_name: perforce
+    restart: unless-stopped
+    volumes:
+      # core is where perforce's own files live. Never put depots in this. The name "myserver" MUST match SERVER_NAME env var
+      - ./core:/opt/perforce/servers/myserver/:rw
+      # Put depots in here by default. In P4Admin place your depot in /opt/perforce/depots/[your-depot-name-here]
+      - ./depots:/opt/perforce/depots/:rw
+      # expose triggers if wanted
+      - ./triggers:/opt/perforce/triggers/:rw
+    environment:
+      # server name MUST match the name of the internal data volume folder above
+      SERVER_NAME : myserver
+      P4PORT : 1666
+      P4USER : perforce
+      P4PASSWD : mypassword
+    ports:
+    - "1666:1666"
