@@ -27,4 +27,6 @@ The username and password in docker-compose will be used to set a first user up.
 
 ## Depots
 
-Place all depots in /opt/perforce/depots/ in the container, this will cause them to be placed in the corresponding depots volumes. Do NOT place them in the core perforce folder, Perforce will let you do this, but the resulting depot will behave strangely, such as writing all files under-the-hood in archive mode.
+Place all depots in /opt/perforce/depots/ in the container, this will cause them to be placed in the corresponding depots volume. Do NOT place them in the core perforce folder, Perforce will let you do this, but the resulting depot will behave strangely, such as writing all files under-the-hood in archive mode.
+
+Note that you will have to manually set filesystem permissions on your depot volume, Perforce will not do this for you.
