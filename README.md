@@ -1,6 +1,6 @@
 # docker-perforce
 
-Peforce in a docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked.
+Peforce in a docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked. Runs on Perforce 2019, and easy to update to any official Perforce Debian package.
 
 ## Details
 
