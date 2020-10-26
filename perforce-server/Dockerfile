@@ -5,9 +5,9 @@ RUN apt-get update && \
     apt-get install curl -y && \
     apt-get install nano -y && \
     export EDITOR=/bin/nano && \
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2019.1-1962178~bionic_amd64.deb -o /tmp/helix-base.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base-20.1_2020.1-2007551~bionic_amd64.deb -o /tmp/helix-base.deb && \
     apt-get update && apt install /tmp/helix-base.deb -y && \
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2019.1-1962178~bionic_amd64.deb -o /tmp/helix.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2020.1-2007551~bionic_amd64.deb -o /tmp/helix.deb && \
     apt install /tmp/helix.deb -y && \
     # clean temporary files
     rm /tmp/helix-base.deb && \
