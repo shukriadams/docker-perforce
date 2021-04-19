@@ -1,13 +1,22 @@
-FROM noonien/perforce-base
+FROM ubuntu:18.04
 
-# Install the perforce server
-RUN apt-get update && \
+ENV DEBIAN_FRONTEND noninteractive
+
+# Update package list and install wget
+RUN apt-get update && apt-get install -y wget gnupg2 && \
+    # Get perforce packages
+    wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && \
+    echo 'deb http://package.perforce.com/apt/ubuntu bionic release' > /etc/apt/sources.list.d/perforce.sources.list && \
+    # clean up the layer.
+    rm -rf /var/log/* \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update && \
     apt-get install curl -y && \
     apt-get install nano -y && \
     export EDITOR=/bin/nano && \
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base-20.1_2020.1-2007551~bionic_amd64.deb -o /tmp/helix-base.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2020.1-2107780~bionic_amd64.deb -o /tmp/helix-base.deb && \
     apt-get update && apt install /tmp/helix-base.deb -y && \
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2020.1-2007551~bionic_amd64.deb -o /tmp/helix.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2020.1-2107780~bionic_amd64.deb -o /tmp/helix.deb && \
     apt install /tmp/helix.deb -y && \
     # clean temporary files
     rm /tmp/helix-base.deb && \
