@@ -36,6 +36,12 @@ if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
     echo Server info:
     p4 -p $P4PORT info
 else
+
+    if [ -z "$START_MODE" ]; then
+        echo "START_MODE defaulting to normal"
+        START_MODE="normal"
+    fi
+
     if [ $START_MODE = "maintenance" ] ; then
         echo "Starting Perforce daemon in maintenance mode"
         cd /opt/perforce/servers/$SERVER_NAME/root && p4d -n
