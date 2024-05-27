@@ -11,6 +11,13 @@ This collection currently includes:
 
 This creates a fully-functional perforce server with 5 client seats. 
 
+## Build
+
+  cd perforce-server
+  sh ./build.sh
+
+Note that Perforce public binaries are constantly being updated, you will almost certainly have to udpate the pegged version numbers in the docker file for build to succeed.
+
 ## Setup
 
 See the example docker-compose.yml for how to quickly scaffold up.
@@ -24,6 +31,11 @@ NB : When first creating, restart the container once before logging on, this is 
 ## Initializing 
 
 The username and password in docker-compose will be used to set a first user up. Changing the compose file afterwards will not update the user - the credentials in the compose file are never used again. To change the password, use the P4admin tool.
+
+## Server modes
+
+This container starts Perforce as a regular daemon process using Perforce's own control agent p4dctl. Set the env var START_NODE to `maintenance` to run the Perforce daemon directly in standard maintenance mode using `p4d -n`. You can also set START_MODE to `idle`, which will star the container in a silent, non-blocking shell loop, but without 
+starting Perforce. Use this mode to debug the container itself, or to manually start Perforce with your own shell command. This is useful for running Perforce upgrades etc.
 
 ## Depots
 

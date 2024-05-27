@@ -36,11 +36,19 @@ if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
     echo Server info:
     p4 -p $P4PORT info
 else
-    # Configuring the server also starts it, if we've not just configured a
-    # server, we need to start it ourselves.
-    p4dctl start $SERVER_NAME
+    if [ $START_MODE = "maintenance" ] ; then
+        echo "Starting Perforce daemon in maintenance mode"
+        cd /opt/perforce/servers/$SERVER_NAME/root && p4d -n
+    elif [ $START_MODE = "idle" ] ; then
+        echo "Container running in idle mode. Perforce has not been started."
+        /bin/sh -c "while true ;sleep 5; do continue; done"
+    else
+        # Configuring the server also starts it, if we've not just configured a
+        # server, we need to start it ourselves.
+        p4dctl start $SERVER_NAME
+        # Pipe server log and wait until the server dies
+        PID_FILE=/var/run/p4d.$SERVER_NAME.pid
+        exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
+    fi
 fi
 
-# Pipe server log and wait until the server dies
-PID_FILE=/var/run/p4d.$SERVER_NAME.pid
-exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
