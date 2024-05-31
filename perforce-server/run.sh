@@ -6,7 +6,8 @@ CONFIGURE_SCRIPT=/opt/perforce/sbin/configure-perforce-server.sh
 SERVERS_ROOT=/opt/perforce/servers
 CONFIG_ROOT=/etc/perforce/p4dctl.conf.d
 
-# Theese need to be defined
+
+# These need to be defined
 if [ -z "$SERVER_NAME" ]; then
     echo FATAL: SERVER_NAME not defined 1>&2
     exit 1;
@@ -21,34 +22,59 @@ P4USER=${P4USER:-p4admin}
 P4PORT=${P4PORT:-ssl:1666}
 
 SERVER_ROOT=$SERVERS_ROOT/$SERVER_NAME
-# Check if the server was configured. If not, configure it.
-if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
-    echo Perforce server $SERVER_NAME not configured, configuring.
 
-    # If the root path already exists, we're configuring an existing server
-    $CONFIGURE_SCRIPT -n \
-        -r $SERVER_ROOT \
-        -p $P4PORT \
-        -u $P4USER \
-        -P $P4PASSWD \
-        $SERVER_NAME
+if [ -z "$START_MODE" ]; then
+    echo "START_MODE defaulting to normal"
+    START_MODE="normal"
+fi
 
-    echo Server info:
-    p4 -p $P4PORT info
+
+if [ $START_MODE = "idle" ] ; then
+    echo "Container running in idle mode. Perforce has not been started."
+    /bin/sh -c "while true ;sleep 5; do continue; done"
 else
+    # Check if the server was configured. If not, configure it.
+    if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
+        echo Perforce server $SERVER_NAME not configured, configuring.
 
-    if [ -z "$START_MODE" ]; then
-        echo "START_MODE defaulting to normal"
-        START_MODE="normal"
-    fi
+        if [ "$UNICODE" = "true" ]; then
+            echo "Unicode mode enable"
+            UNICODE="--unicode"
+        else
+            echo "Unicode mode disable"
+            UNICODE=""
+        fi
 
-    if [ $START_MODE = "maintenance" ] ; then
+        if [ "$CASE_SENSITIVE" = "true" ]; then
+            echo "case sensitive mode enable"
+            CASE_SENSITIVE="--case 0"
+        else
+            echo "case insensitive mode enable"
+            CASE_SENSITIVE="--case 1"
+        fi
+
+        # If the root path already exists, we're configuring an existing server
+        $CONFIGURE_SCRIPT -n \
+            -r $SERVER_ROOT \
+            -p $P4PORT \
+            -u $P4USER \
+            -P $P4PASSWD \
+            $UNICODE \
+            $CASE_SENSITIVE \
+            $SERVER_NAME
+
+        echo Server info:
+        p4 -p $P4PORT info
+        # container exits intentionally at this point, and gets reset, at which point it proceeds to either maintenance or normal mode
+
+    elif [ $START_MODE = "maintenance" ] ; then
+        cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
+
         echo "Starting Perforce daemon in maintenance mode"
         cd /opt/perforce/servers/$SERVER_NAME/root && p4d -n
-    elif [ $START_MODE = "idle" ] ; then
-        echo "Container running in idle mode. Perforce has not been started."
-        /bin/sh -c "while true ;sleep 5; do continue; done"
     else
+        cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
+
         # Configuring the server also starts it, if we've not just configured a
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME
@@ -57,4 +83,3 @@ else
         exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
     fi
 fi
-

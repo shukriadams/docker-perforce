@@ -11,12 +11,17 @@ services:
       - ./core:/opt/perforce/servers/myserver/:rw
       # Put depots in here by default. In P4Admin place your depot in /opt/perforce/depots/[your-depot-name-here]
       - ./depots:/opt/perforce/depots/:rw
+      # do not expose this when creating service, mount has to be populated with finalized
+      # config. See /core/config-mirror for base files
+      #- ./p4ctl/:/etc/perforce/:rw
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
       P4PORT : 1666
       P4USER : perforce
       P4PASSWD : myPassword123!!!
-      START_MODE: maintenance
+      #START_MODE: idle
+      UNICODE: "true"
+      CASE_SENSITIVE: "false"
     ports:
     - "1666:1666"

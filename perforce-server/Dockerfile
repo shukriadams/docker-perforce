@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     apt-get update && apt install /tmp/helix-base.deb -y && \
     curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2024.1-2596294~focal_amd64.deb -o /tmp/helix.deb && \
     apt install /tmp/helix.deb -y && \
+    # set permissions
+    usermod -aG root perforce && \
+    chown -R perforce /opt/perforce && \
     # clean temporary files
     rm /tmp/helix-base.deb && \
     rm /tmp/helix.deb && \ 
