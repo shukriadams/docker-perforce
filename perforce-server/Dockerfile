@@ -16,9 +16,9 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     export EDITOR=/bin/nano && \
     apt-get install python3-minimal -y && \
     apt-get install python3-pip -y && \ 
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2024.1-2596294~focal_amd64.deb -o /tmp/helix-base.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2020.2-2387343~focal_amd64.deb -o /tmp/helix-base.deb && \
     apt-get update && apt install /tmp/helix-base.deb -y && \
-    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2024.1-2596294~focal_amd64.deb -o /tmp/helix.deb && \
+    curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d_2020.2-2387343~focal_amd64.deb -o /tmp/helix.deb && \
     apt install /tmp/helix.deb -y && \
     # set permissions
     usermod -aG root perforce && \

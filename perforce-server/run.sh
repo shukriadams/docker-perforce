@@ -33,6 +33,7 @@ if [ $START_MODE = "idle" ] ; then
     echo "Container running in idle mode. Perforce has not been started."
     /bin/sh -c "while true ;sleep 5; do continue; done"
 else
+
     # Check if the server was configured. If not, configure it.
     if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
         echo Perforce server $SERVER_NAME not configured, configuring.
@@ -67,14 +68,14 @@ else
         p4 -p $P4PORT info
         # container exits intentionally at this point, and gets reset, at which point it proceeds to either maintenance or normal mode
 
-    elif [ $START_MODE = "maintenance" ] ; then
+        # copy config to mirror location so available for external use
         cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
+    fi
 
+    if [ $START_MODE = "maintenance" ] ; then
         echo "Starting Perforce daemon in maintenance mode"
         cd /opt/perforce/servers/$SERVER_NAME/root && p4d -n
     else
-        cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
-
         # Configuring the server also starts it, if we've not just configured a
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME

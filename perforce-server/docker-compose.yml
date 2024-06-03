@@ -3,7 +3,7 @@
 version: "2"
 services:
   perforce:
-    image: shukriadams/perforce-server:latest
+    image: shukriadams/perforce-server:latest-2020
     container_name: perforce-test
     restart: unless-stopped
     volumes:
@@ -13,15 +13,15 @@ services:
       - ./depots:/opt/perforce/depots/:rw
       # do not expose this when creating service, mount has to be populated with finalized
       # config. See /core/config-mirror for base files
-      #- ./p4ctl/:/etc/perforce/:rw
+      - ./config/:/etc/perforce/:rw
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
       P4PORT : 1666
       P4USER : perforce
       P4PASSWD : myPassword123!!!
-      #START_MODE: idle
       UNICODE: "true"
       CASE_SENSITIVE: "false"
+      START_MODE: maintenance
     ports:
     - "1666:1666"
