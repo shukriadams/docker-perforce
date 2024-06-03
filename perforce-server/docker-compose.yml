@@ -17,7 +17,7 @@ services:
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
-      P4PORT : 1666
+      P4PORT : ssl::1666 # use "1666" to skip ssl
       P4USER : perforce
       P4PASSWD : myPassword123!!!
       UNICODE: "true"
