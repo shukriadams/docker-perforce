@@ -13,7 +13,7 @@ services:
       - ./depots:/opt/perforce/depots/:rw
       # do not expose this when creating service, mount has to be populated with finalized
       # config. See /core/config-mirror for base files
-      - ./config/:/etc/perforce/:rw
+      # - ./config/:/etc/perforce/:rw
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
@@ -22,6 +22,6 @@ services:
       P4PASSWD : myPassword123!!!
       UNICODE: "true"
       CASE_SENSITIVE: "false"
-      START_MODE: maintenance
+      # START_MODE: maintenance
     ports:
     - "1666:1666"

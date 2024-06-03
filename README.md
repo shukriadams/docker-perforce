@@ -26,18 +26,19 @@ Note that Perforce public binaries are constantly being updated, you will almost
 
 ## Setup
 
-See the example docker-compose.yml for how to quickly scaffold up server. You should create volume mounts directories for your depot(s), but the container will create and permission-set
-its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
+See the example docker-compose.yml for how to quickly scaffold up server. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
+
+Do not volume mount /etc/perforce on start, this will cause an internal setup script failure. Let the start process start, check
+container logs to confirm the server initialized. You will find `config-mirror` directory in the directory you mounted to `/opt/perforce/servers/myserver/`. Copy this directory to some place outside this directory, and map it to /etc/perforce, then restart your container. This is your Perforce internal config. You don't have to change anything in it, but should you wish to, this is where to add them.
+
+Note that failure to mount config after creation isn't a serious issue - default config will be regenerated each time the container is started, and as long as you don't need custom config and don't mind the extra step of the container generating config and automatically restarting, the server will function normally this way.
+
+Binding /etc/perforce to a volume right from the start does not work because of issues in Perforce's internal setup scripts that fail to run when they encounter an empty directory in a volume mount. 
+
 
 ## Config
 
 The username and password in docker-compose will be used to set a first user up. Changing the compose file afterwards will not update the user - the credentials in the compose file are never used again. To change the password, use the P4admin tool. All env variables for container config are for setup-time only. Once setup, env vars aren't read anymore. Changes will need to be done via Perforce config.
-
-## Static config
-
-It is recommended, but not required, that you volume mount static config. This will save on unnecessary server reinitializing each time the container starts, and also exposes the config files to you should you want to change config. Copy the core/config-mirror directory to a suitable place on your system, then mount it to `/etc/perforce/` in your container. You can then change the contents of this file. 
-
-IMPORTANT : DO NOT MOUNT THIS DIRECTORY WHEN SETTING UP A NEW CONTAINER. Perforce's internal setup script will fail if it encounters and empty Docker-mounted config directory. Once your container is setup, copy the config directory and mount. DO NOT DIRECTLY MOUNT THE DIRECTORY IN core/config-mirror, this directory is overwritten each time the container starts, and is there only to expose config to you.
 
 ## Server modes
 
