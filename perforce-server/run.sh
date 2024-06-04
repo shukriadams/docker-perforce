@@ -7,11 +7,12 @@ SERVERS_ROOT=/opt/perforce/servers
 CONFIG_ROOT=/etc/perforce/p4dctl.conf.d
 
 
-# These need to be defined
+# These vars need to be defined
 if [ -z "$SERVER_NAME" ]; then
     echo FATAL: SERVER_NAME not defined 1>&2
     exit 1;
 fi
+
 if [ -z "$P4PASSWD" ]; then
     echo FATAL: P4PASSWD not defined 1>&2
     exit 1;
@@ -28,6 +29,20 @@ if [ -z "$START_MODE" ]; then
     START_MODE="normal"
 fi
 
+# force take ownership of ssl dir, this is needed when passing in from docker mount
+if [ ! -z "$P4SSLDIR" ]; then
+    if [ -d $P4SSLDIR ]; then
+        echo "Claiming ownership of SSL dir $P4SSLDIR"
+        chown perforce -R $P4SSLDIR 
+        chgrp perforce -R $P4SSLDIR 
+        chmod 700 -R $P4SSLDIR 
+
+        # use -f and |: to ignore errors if dir empty
+        chmod -f 600 -R $P4SSLDIR/* |:
+    else
+        echo "Declared P4SSLDIR directory $P4SSLDIR does not exist, cannot claim"
+    fi
+fi
 
 if [ $START_MODE = "idle" ] ; then
     echo "Container running in idle mode. Perforce has not been started."
@@ -39,18 +54,18 @@ else
         echo Perforce server $SERVER_NAME not configured, configuring.
 
         if [ "$UNICODE" = "true" ]; then
-            echo "Unicode mode enable"
+            echo "Unicode mode enabled"
             UNICODE="--unicode"
         else
-            echo "Unicode mode disable"
+            echo "Unicode mode disabled"
             UNICODE=""
         fi
 
         if [ "$CASE_SENSITIVE" = "true" ]; then
-            echo "case sensitive mode enable"
+            echo "case sensitive mode enabled"
             CASE_SENSITIVE="--case 0"
         else
-            echo "case insensitive mode enable"
+            echo "case insensitive mode enabled"
             CASE_SENSITIVE="--case 1"
         fi
 
