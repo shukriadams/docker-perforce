@@ -21,7 +21,6 @@ fi
 # Default values
 P4USER=${P4USER:-p4admin}
 P4PORT=${P4PORT:-ssl:1666}
-
 SERVER_ROOT=$SERVERS_ROOT/$SERVER_NAME
 
 if [ -z "$START_MODE" ]; then
@@ -33,8 +32,8 @@ fi
 if [ ! -z "$P4SSLDIR" ]; then
     if [ -d $P4SSLDIR ]; then
         echo "Claiming ownership of SSL dir $P4SSLDIR"
-        chown perforce -R $P4SSLDIR 
-        chgrp perforce -R $P4SSLDIR 
+        chown root -R $P4SSLDIR 
+        chgrp root -R $P4SSLDIR 
         chmod 700 -R $P4SSLDIR 
 
         # use -f and |: to ignore errors if dir empty
@@ -94,6 +93,10 @@ else
         # Configuring the server also starts it, if we've not just configured a
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME
+
+        # force trust inside container, this doesn't persist across container instances
+        p4 trust -f -y
+
         # Pipe server log and wait until the server dies
         PID_FILE=/var/run/p4d.$SERVER_NAME.pid
         exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
