@@ -35,6 +35,9 @@ Note that failure to mount config after creation isn't a serious issue - default
 
 Binding /etc/perforce to a volume right from the start does not work because of issues in Perforce's internal setup scripts that fail to run when they encounter an empty directory in a volume mount. 
 
+## User
+
+The container runs as user `root`, this is a Perforce requirement and cannot be changed. Do not set the container to run as another user.
 
 ## Config
 
