@@ -35,4 +35,5 @@ VOLUME /opt/perforce/triggers
 
 # Add startup file and run it by default
 COPY run.sh /
+COPY upgrade.sh /
 CMD ["/run.sh"]
