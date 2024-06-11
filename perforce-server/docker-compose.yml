@@ -3,7 +3,7 @@
 version: "2"
 services:
   perforce:
-    image: shukriadams/perforce-server:latest-2020
+    image: shukriadams/perforce-server:latest-2024
     container_name: perforce-test
     restart: unless-stopped
     volumes:

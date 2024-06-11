@@ -4,7 +4,7 @@ Container images available @ https://hub.docker.com/r/shukriadams/perforce-serve
 
 Peforce in an Ubuntu-based docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked. 
 
-Releases up to 0.0.4 run on run on Perforce 2020. Releases from 0.0.5 onward run on Perforce 2024.
+Repo is split into branches for Perforce servers version. Branch `2020` is for Perforce server 2020.1, `2024` for Perforce 2024.1.
 
 ## Details
 
