@@ -94,9 +94,6 @@ else
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME
 
-        # force trust inside container, this doesn't persist across container instances
-        p4 trust -f -y
-
         # Pipe server log and wait until the server dies
         PID_FILE=/var/run/p4d.$SERVER_NAME.pid
         exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
