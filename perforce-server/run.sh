@@ -48,8 +48,8 @@ if [ $START_MODE = "idle" ] ; then
     /bin/sh -c "while true ;sleep 5; do continue; done"
 else
 
-    # Check if the server was configured. If not, configure it.
-    if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ]; then
+    # Check if the server was configured and if root dir exists. If not either, configure it.
+    if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ] || [ ! -d $SERVER_ROOT/root ]; then
         echo Perforce server $SERVER_NAME not configured, configuring.
 
         if [ "$UNICODE" = "true" ]; then
