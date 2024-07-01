@@ -17,5 +17,8 @@ services:
       P4PORT : 1666
       P4USER : perforce
       P4PASSWD : myPassword123!!!
-    ports:
-    - "1666:1666"
+    # using host machine network is recommended for performance reasons
+    network_mode: "host"  
+    # enable this if not using network_mode: "host"  
+    #ports:
+    #- "1666:1666"
