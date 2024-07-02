@@ -56,6 +56,12 @@ More realistically, you'll want to start the server in recovery mode. Use
 
     cd /opt/perforce/servers/<YOUR SERVER NAME>/root && p4d -n
 
+For additional debugging options you can also start the server with
+
+    p4dctl -v 9 start <YOUR SERVER NAME> 
+
+This forces more useful p4dctl messages.
+
 ## Depots
 
 Place all depots in /opt/perforce/depots/ in the container, this will cause them to be placed in the corresponding depots volume. Do NOT place them in the core perforce folder, Perforce will let you do this, but the resulting depot will behave strangely, such as writing all files under-the-hood in archive mode.
