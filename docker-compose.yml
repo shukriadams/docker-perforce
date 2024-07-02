@@ -14,7 +14,7 @@ services:
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
-      P4PORT: /opt/perforce/servers/myserver/root
+      P4ROOT: /opt/perforce/servers/myserver/root
       P4PORT : 1666
       P4USER : perforce
       P4PASSWD : myPassword123!!!
