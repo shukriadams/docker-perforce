@@ -1,3 +1,4 @@
+# example of compose for deployment
 version: "2"
 services:
   perforce:
@@ -15,9 +16,15 @@ services:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
       P4ROOT: /opt/perforce/servers/myserver/root
+      # use "1666" to skip ssl
       P4PORT : 1666
       P4USER : perforce
-      P4PASSWD : myPassword123!!!
+      P4PASSWD : Mypassword1
+      UNICODE: "true"
+      CASE_SENSITIVE: "false"      
+      # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.
+      # START_MODE: maintenance
+      TZ: Etc/UTC
     # using host machine network is recommended for performance reasons
     network_mode: "host"  
     # enable this if not using network_mode: "host"  

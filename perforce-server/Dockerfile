@@ -1,5 +1,7 @@
 FROM ubuntu:18.04
 
+LABEL maintainer="Shukri Adams <contact@shukriadams.com>"
+
 ENV DEBIAN_FRONTEND noninteractive
 
 # Update package list and install wget
@@ -25,6 +27,8 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     # set permissions
     usermod -aG root perforce && \
     chown -R perforce /opt/perforce && \
+    # force p4 trust for root user session
+    echo "p4 trust -yf" >> /root/.bashrc && \
     # clean temporary files
     rm /tmp/helix-base.deb && \
     rm /tmp/helix.deb && \ 

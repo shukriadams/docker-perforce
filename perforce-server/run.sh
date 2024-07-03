@@ -78,7 +78,7 @@ else
             $CASE_SENSITIVE \
             $SERVER_NAME
 
-        echo Server info:
+        echo "Server info:"
         p4 -p $P4PORT info
         # container exits intentionally at this point, and gets reset, at which point it proceeds to either maintenance or normal mode
 
