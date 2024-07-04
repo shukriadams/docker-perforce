@@ -1,19 +1,10 @@
 # docker-perforce
 
-Container images available @ https://hub.docker.com/r/shukriadams/perforce-server
-
-Peforce in an Ubuntu-based docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked. 
+docker-perforce is Peforce server an Ubuntu-based docker container. Container images available @ https://hub.docker.com/r/shukriadams/perforce-server. Based on https://github.com/noonien/docker-perforce-server, now permanently forked.
 
 Releases up to 0.0.4 run on run on Perforce 2020. Releases from 0.0.5 onward run on Perforce 2024.
 
-## Details
-
-This collection currently includes:
-
-  - [perforce-base](perforce-base) - Base container, includes the Perforce APT repositories.
-  - [perforce-server](perforce-server/) - Perforce Helix Server container.
-
-This creates a fully-functional perforce server with 5 client seats. 
+This container creates a fully-functional Perforce server with 5 client seats. You can apply a license to this server if you wish. This is a production-quality container used at a game studio with 50+ developers, multiple depot and many terabytes of data.
 
 ## Build Container
 
@@ -28,16 +19,13 @@ Note that Perforce public binaries are constantly being updated, you will almost
 
 See the example docker-compose.yml for how to quickly scaffold up server. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
 
-Do not volume mount /etc/perforce on start, this will cause an internal setup script failure. Let the start process start, check
-container logs to confirm the server initialized. You will find `config-mirror` directory in the directory you mounted to `/opt/perforce/servers/myserver/`. Copy this directory to some place outside this directory, and map it to /etc/perforce, then restart your container. This is your Perforce internal config. You don't have to change anything in it, but should you wish to, this is where to add them.
+Do not volume mount config (/etc/perforce) when setting up a new container, the container needs to generate config at least once to properly initialize itself. Instead let the start process run, and check container logs to confirm the server initialized. You will find a `config-mirror` directory in the core volume directory. Copy this directory to some place outside this directory (the dir in core is ovewritten each time container starts), and map your safe copy it /etc/perforce. Then restart your container. This is your Perforce internal config, you can change it if you need to.
 
-Note that failure to mount config after creation isn't a serious issue - default config will be regenerated each time the container is started, and as long as you don't need custom config and don't mind the extra step of the container generating config and automatically restarting, the server will function normally this way.
-
-Binding /etc/perforce to a volume right from the start does not work because of issues in Perforce's internal setup scripts that fail to run when they encounter an empty directory in a volume mount. 
+Note that failure to permanently volume mount config isn't a serious issue - default config will be regenerated each time the container starts, and as long as you don't need custom config and don't mind the extra step of the container generating config and automatically restarting, the server will function normally.
 
 ## User
 
-The container runs as user `root`, this is a Perforce requirement and cannot be changed. Do not set the container to run as another user.
+The container itself runs as user `root`, but the actual Perforce server runs as user `perforce`. The root user start Perforce using the `p4dctl`  which in turn runs as the perforce user. This can lead to strange situations with file permissions. Always start this container start as root, and if you alter any files that the server interacts with, from within the container set these to be owned by user perforce. 
 
 ## Config
 

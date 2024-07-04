@@ -28,19 +28,39 @@ if [ -z "$START_MODE" ]; then
     START_MODE="normal"
 fi
 
+
 # force take ownership of ssl dir, this is needed when passing in from docker mount
 if [ ! -z "$P4SSLDIR" ]; then
     if [ -d $P4SSLDIR ]; then
         echo "Claiming ownership of SSL dir $P4SSLDIR"
-        chown root -R $P4SSLDIR 
-        chgrp root -R $P4SSLDIR 
-        chmod 700 -R $P4SSLDIR 
+        chown perforce -R $P4SSLDIR 
+        chgrp perforce -R $P4SSLDIR 
+        chmod 600 $P4SSLDIR/* 
 
         # use -f and |: to ignore errors if dir empty
         chmod -f 600 -R $P4SSLDIR/* |:
     else
         echo "Declared P4SSLDIR directory $P4SSLDIR does not exist, cannot claim"
     fi
+fi
+
+# p4dctl runs as user perforce, therefore all dirs that Perforce writes to must be owned by user perforce
+# force ownership of logs dir
+LOGS_DIR=$SERVERS_ROOT/$SERVER_NAME/logs
+if [ -d LOGS_DIR ]; then
+    echo "Claiming ownership of logs dir $LOGS_DIR"
+    chown perforce -R $LOGS_DIR 
+    chgrp perforce -R $LOGS_DIR
+    chmod 700 -R $LOGS_DIR
+fi
+
+# force ownership of journals dir
+JOURNALS_DIR=$SERVERS_ROOT/$SERVER_NAME/journals
+if [ -d LOGS_DIR ]; then
+    echo "Claiming ownership of journals dir $JOURNALS_DIR"
+    chown perforce -R $JOURNALS_DIR
+    chgrp perforce -R $JOURNALS_DIR
+    chmod 700 -R $JOURNALS_DIR
 fi
 
 if [ $START_MODE = "idle" ] ; then

@@ -2,7 +2,7 @@
 version: "2"
 services:
   perforce:
-    image: shukriadams/perforce-server:0.0.2
+    image: shukriadams/perforce-server:2020-0.0.1
     container_name: perforce
     restart: unless-stopped
     volumes:
@@ -15,9 +15,8 @@ services:
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
-      P4ROOT: /opt/perforce/servers/myserver/root
       # use "1666" to skip ssl
-      P4PORT : 1666
+      P4PORT : ssl::1666
       P4USER : perforce
       P4PASSWD : Mypassword1
       UNICODE: "true"
