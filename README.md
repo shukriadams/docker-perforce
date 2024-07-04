@@ -56,6 +56,8 @@ Place all depots in /opt/perforce/depots/ in the container, this will cause them
 
 Note that you will have to manually set filesystem permissions on your depot volume, Perforce will not do this for you.
 
-## Permissions
+## SSL
 
-To run the Perforce server, you need to shell in as user `perforce`. The container doesn't set this as the default user because Perforce setup must done as `root`. Perforce quirk.
+SSL certificates are automatically created by Perforce in the core/root/ssl directory. Because the core directory is always volume mounted, these certifcates will persist and you don't have to do anything special to get SSL to work. The container's start script will always force the correct permissions on this directory.
+
+You can volume map any arbitrary directory with certificates into your container, but the directory should always map to core/root/ssl inside the container, even if you set the P4SSLDIR variable. This seems to be a quirk with Perforce in Docker.
