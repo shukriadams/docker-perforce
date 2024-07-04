@@ -47,20 +47,24 @@ fi
 # p4dctl runs as user perforce, therefore all dirs that Perforce writes to must be owned by user perforce
 # force ownership of logs dir
 LOGS_DIR=$SERVERS_ROOT/$SERVER_NAME/logs
-if [ -d LOGS_DIR ]; then
+if [ -d $LOGS_DIR ]; then
     echo "Claiming ownership of logs dir $LOGS_DIR"
     chown perforce -R $LOGS_DIR 
     chgrp perforce -R $LOGS_DIR
     chmod 700 -R $LOGS_DIR
+else
+    echo "Logs dir $LOGS_DIR not found, cannot claim"
 fi
 
 # force ownership of journals dir
 JOURNALS_DIR=$SERVERS_ROOT/$SERVER_NAME/journals
-if [ -d LOGS_DIR ]; then
+if [ -d $LOGS_DIR ]; then
     echo "Claiming ownership of journals dir $JOURNALS_DIR"
     chown perforce -R $JOURNALS_DIR
     chgrp perforce -R $JOURNALS_DIR
     chmod 700 -R $JOURNALS_DIR
+else
+    echo "Logs dir $JOURNALS_DIR not found, cannot claim"
 fi
 
 if [ $START_MODE = "idle" ] ; then
