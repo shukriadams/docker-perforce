@@ -2,44 +2,72 @@
 
 Container images available @ https://hub.docker.com/r/shukriadams/perforce-server
 
-Peforce in an Ubuntu-based docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked. 
+Peforce in an Ubuntu-based docker container. Based on https://github.com/noonien/docker-perforce-server, now permanently forked. Contains a single Perforce server instance, supporting multiple depots.
 
-Repo is split into branches for Perforce servers version. Branch `2020` is for Perforce server 2020.1, `2024` for Perforce 2024.1.
-
-## Setup
-
-See the example perforce-server/docker-compose.yml for an example setup. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will not affect container stability, but will throw write exceptions when you try to submit files to the server under normal Perforce use. It is advisable to do a small test commit every time you setup a depot in a new volume mount, to ensure that write permissions work.
+This project is split into branches by Perforce servers version. Branch `2020` is for Perforce server 2020.1, `2024` for Perforce 2024.1.
 
 ## Volume mapping
 
-This project has an example docker-compose file that assumes the following volume mapping structure for your Perforce server. 
+This project has an example docker-compose file that assumes the following volume mapping structure for your Perforce server. Your local (files on your container host system) shoud look like
 
     /
-    ├─ core/
+    ├─ core/                    (server core root)
     │  ├─ archives/
     │  │  ├─ spec/
+    │  ├─ config-mirror
     │  ├─ journals/
     │  ├─ logs/
-    │  ├─ ssl/
-    ├─ depots/
+    │  ├─ root/                 (server root)
+    │  ├─ ssl/  
+    ├─ config/                  (config root)
+    ├─ depots/                  (depot root)
     │  ├─ depot1/
     │  ├─ depot2/
-    ├─ triggers/
     ├─ docker-compose.yml
 
-Spec, jorunals, logs and ssl are for Perforce's internal use, if you're unfamiliar with them, defaults are suggested, you can change their location later using both Perforce config and Docker volume mapping. Triggers is optional, once again, this is something that can be configured in Perforce later, and you can have several trigger solutions at once. Depots is where Perforce stores verion files for a given depot, these can also be broken out stored in different locations (such us on different physical disks/volumes), which is useful for very large projects.
+Inside the container, the file structure above corresponds to 
 
-## Config
+    etc/
+    ├─ perforce/                (config root)
+    opt/
+    ├─ perforce/
+    │  ├─ depots/               (depot root)
+    │  │  ├─ depot1/
+    │  │  ├─ depot2/
+    │  ├─ servers/
+    │  │  ├─ myserver/          (server core root)
+    │  │  │  ├─ archives/
+    │  │  │  │  ├─ spec/
+    │  │  │  ├─ config-mirror/
+    │  │  │  ├─ journals/
+    │  │  │  ├─ logs/
+    │  │  │  ├─ root/           (server root)
+    │  │  │  ├─ ssl/
 
-This is important for setting up a new server. Perforce autogenerates local database files and some config to `/etc/perforce` in the container. Autogeneration happens on container start, and will reoccur every container restart if `/etc/peforce` isn't persisted with a volume mount. The default config that Perforce generates is enough to run the server, so you don't have to persist this config. 
 
-Perforce cannot generate config in an empty directory that is volume mounted. This is due to the way Perforce's setup script runs. So, NEVER VOLUME MAP `/etc/peforce` TO AN EMPTY DIRECTORY. 
+Spec, journals, logs and ssl are for Perforce's internal use, if you're unfamiliar with them, defaults are suggested, you can change their location later using both Perforce config and Docker volume mapping. Depots is where Perforce stores verion files for a given depot, these can also be broken out stored in different locations (such us on different physical disks/volumes), which is useful for very large projects.
 
-To get config, either create your own config files, copy them from an exisiting server, or allow your container to generate config internally. If doing the latter, you will find a copy of config in the mounted directory `core/config-mirror`. Do not change the content of this directory, it will be overwritten every time the container restarts. Instead, copy to any other suitable location, mount that location as `/etc/perforce`, and then change as necessary.
+- See the example perforce-server/docker-compose.yml for an example setup. 
+- The container will create and set permissions for its core directory automatically.
+- You can create directories for your depot(s) in advance. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will not affect container stability, but you will get  write permission errors when you try to submit files to the server under normal Perforce use. It is advisable to do a small test commit every time you setup a depot in a new volume mount, to ensure that write permissions work.
+
+## Permissions
+
+IMPORTANT 
+
+To run the Perforce server, YOU NEED TO SHELL IN AS USER `perforce`. The container doesn't set this as the default user because Perforce setup must done as `root`. This is Perforce quirk. 
+
+## Starting from scratch
+
+TL;DR : Do not volume map `/etc/perforce` the first time you start your container.
+
+This is important for setting up a new server. Perforce autogenerates directories and files in the config root at `/etc/perforce` in the container. Autogeneration happens on container start, and will reoccur every container restart if `/etc/peforce` isn't persisted with a volume mount. The default config that Perforce generates is enough to run a server normally, so you don't have to persist config, but you mostly likely want to.
+
+Perforce's internal config scripts cannot run in an empty directory that is already volume mounted (permission errors etc). So, NEVER VOLUME MAP `/etc/peforce` TO AN EMPTY DIRECTORY. To get config, either create your own config files if you know what they should contain, copy them from an exisiting server, or allow your container to generate config to an unmapped directory. If doing the latter, you will find a copy of config in the mounted directory `core/config-mirror`.  The content of this directory is automatically overwritten each time the container starts, so all changes you make here will be lost. These files are for reference only. Copy them to your local config-root directory, then mount to `/etc/perforce`. You modify your local config-root files as needed.
 
 ### Additional config
 
-The username and password in docker-compose will be used to set a first user up. Changing the compose file afterwards will not update the user - the credentials in the compose file are never used again. To change the password, use the P4admin tool. All env variables for container config are for setup-time only. Once setup, env vars aren't read anymore. Changes will need to be done via Perforce config.
+The username and password in docker-compose will be used to create user the first time you run your container. Changing the compose file afterwards will not update the user - these credentials are never used again. To change the password, use the P4admin tool. All env variables for container config are for setup-time only. Once setup, env vars aren't read anymore. Changes will need to be done via Perforce config.
 
 Available config env variables are:
 
@@ -52,14 +80,13 @@ Available config env variables are:
 
 ## Server modes
 
-This container starts Perforce as a regular daemon process using Perforce's own control agent p4dctl. Set the env var START_NODE to `maintenance` to run the Perforce daemon directly in standard maintenance mode using `p4d -n`. You can also set START_MODE to `idle`, which will star the container in a silent, non-blocking shell loop, but without 
-starting Perforce. Use this mode to debug the container itself, or to manually start Perforce with your own shell command. This is useful for running Perforce upgrades etc.
+This container starts Perforce as a regular daemon process using Perforce's own control agent p4dctl. Set the env var START_NODE to `maintenance` to run the Perforce daemon directly in standard maintenance mode, which corresponds to starting the server with `p4d -n`. You can also set START_MODE to `idle`, which starts the container, but not Perforce. Use this mode to debug the container setup and manually start Perforce with your own shell command. This is useful for running Perforce upgrades etc.
 
 To start Perforce manually while in the container run 
 
     cd /opt/perforce/servers/<YOUR SERVER NAME>/root && p4d
 
-More realistically, you'll want to start the server in recovery mode. Use
+To start Perforce in recovery mode use
 
     cd /opt/perforce/servers/<YOUR SERVER NAME>/root && p4d -n
 
@@ -69,9 +96,7 @@ Place all depots in /opt/perforce/depots/ in the container, this will cause them
 
 Note that you will have to manually set filesystem permissions on your depot volume, Perforce will not do this for you.
 
-## Permissions
 
-To run the Perforce server, you need to shell in as user `perforce`. The container doesn't set this as the default user because Perforce setup must done as `root`. Perforce quirk.
 
 
 ## Build Container
