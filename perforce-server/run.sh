@@ -34,8 +34,7 @@ if [ ! -z "$P4SSLDIR" ]; then
     if [ -d $P4SSLDIR ]; then
         echo "Claiming ownership of SSL dir $P4SSLDIR"
         chown perforce -R $P4SSLDIR 
-        chgrp perforce -R $P4SSLDIR 
-        chmod 600 $P4SSLDIR/* 
+        chmod 700 $P4SSLDIR
 
         # use -f and |: to ignore errors if dir empty
         chmod -f 600 -R $P4SSLDIR/* |:
