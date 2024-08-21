@@ -10,6 +10,25 @@ Repo is split into branches for Perforce servers version. Branch `2020` is for P
 
 See the example perforce-server/docker-compose.yml for an example setup. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will not affect container stability, but will throw write exceptions when you try to submit files to the server under normal Perforce use. It is advisable to do a small test commit every time you setup a depot in a new volume mount, to ensure that write permissions work.
 
+## Volume mapping
+
+This project has an example docker-compose file that assumes the following volume mapping structure for your Perforce server. 
+
+    /
+    ├─ core/
+    │  ├─ archives/
+    │  │  ├─ spec/
+    │  ├─ journals/
+    │  ├─ logs/
+    │  ├─ ssl/
+    ├─ depots/
+    │  ├─ depot1/
+    │  ├─ depot2/
+    ├─ triggers/
+    ├─ docker-compose.yml
+
+Spec, jorunals, logs and ssl are for Perforce's internal use, if you're unfamiliar with them, defaults are suggested, you can change their location later using both Perforce config and Docker volume mapping. Triggers is optional, once again, this is something that can be configured in Perforce later, and you can have several trigger solutions at once. Depots is where Perforce stores verion files for a given depot, these can also be broken out stored in different locations (such us on different physical disks/volumes), which is useful for very large projects.
+
 ## Config
 
 This is important for setting up a new server. Perforce autogenerates local database files and some config to `/etc/perforce` in the container. Autogeneration happens on container start, and will reoccur every container restart if `/etc/peforce` isn't persisted with a volume mount. The default config that Perforce generates is enough to run the server, so you don't have to persist this config. 
