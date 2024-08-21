@@ -28,7 +28,6 @@ if [ -z "$START_MODE" ]; then
     START_MODE="normal"
 fi
 
-
 # force take ownership of ssl dir, this is needed when passing in from docker mount
 if [ ! -z "$P4SSLDIR" ]; then
     if [ -d $P4SSLDIR ]; then
