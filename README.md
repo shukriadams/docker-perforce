@@ -17,7 +17,7 @@ Note that Perforce public binaries are constantly being updated, you will almost
 
 ## Setup
 
-See the example docker-compose.yml for how to quickly scaffold up server. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
+See the example docker-compose.yml for how to quickly scaffold up a server instance. You should create volume mounts directories for your depot(s), but the container will create and permission-set its core directory automatically. Depot volumes will require chmod, these are not claimed by the container. Failing to do this will throw write exceptions when you try to submit files to those depots.
 
 Do not volume mount config (/etc/perforce) when setting up a new container, the container needs to generate config at least once to properly initialize itself. Instead let the start process run, and check container logs to confirm the server initialized. You will find a `config-mirror` directory in the core volume directory. Copy this directory to some place outside this directory (the dir in core is ovewritten each time container starts), and map your safe copy it /etc/perforce. Then restart your container. This is your Perforce internal config, you can change it if you need to.
 
@@ -25,18 +25,20 @@ Note that failure to permanently volume mount config isn't a serious issue - def
 
 ## User
 
-The container itself runs as user `root`, but the actual Perforce server runs as user `perforce`. The root user start Perforce using the `p4dctl`  which in turn runs as the perforce user. This can lead to strange situations with file permissions. Always start this container start as root, and if you alter any files that the server interacts with, from within the container set these to be owned by user perforce. 
+The container itself runs as user `root`, but the actual Perforce server runs as user `perforce`. The root user starts Perforce using `p4dctl`, which in turn hands control over to the `perforce` user. This can lead to strange situations with file permissions, and it's possible to break your server if a file gets owned by the wrong user. 
+
+In summary, if you intend to run p4d, connect as user perforce. If you intend to run p4ctl, connect as root.
 
 ## Config
 
-The username and password in docker-compose will be used to set a first user up. Changing the compose file afterwards will not update the user - the credentials in the compose file are never used again. To change the password, use the P4admin tool. All env variables for container config are for setup-time only. Once setup, env vars aren't read anymore. Changes will need to be done via Perforce config.
+Most env variabless defined in docker-compose are for setup-time only. For example, username and password are used to set up a super user when the container is run for the first time. Changing these credentials afterwards has no effect (use P4admin app to alter user credentials). These variables are injected into Perforce's own config files that you can find in `etc/perforce` inside the container.
 
 ## Server modes
 
-This container starts Perforce as a regular daemon process using Perforce's own control agent p4dctl. Set the env var START_NODE to `maintenance` to run the Perforce daemon directly in standard maintenance mode using `p4d -n`. You can also set START_MODE to `idle`, which will star the container in a silent, non-blocking shell loop, but without 
-starting Perforce. Use this mode to debug the container itself, or to manually start Perforce with your own shell command. This is useful for running Perforce upgrades etc.
+This container starts Perforce as a regular daemon process using Perforce's own control agent p4dctl. Set START_MODE to `idle`, which will start the container in a silent, non-blocking shell loop, but without 
+starting Perforce. Use this mode to debug the container itself, or to manually start Perforce with your own shell command. This is useful for diagnosing Perforce issues, upgrading Perforce etc.
 
-To start Perforce manually while in the container run 
+WARNING : You have to connect as user 'perforce' if you want to start p4d manually. Use `docker exec -it -u peforce YOURCONTAINERNAME bash` to connect. If you don't specific a user, you will connect as root, and running p4d as root will lead to errors. Once in your container as user perforce, start the server manually with
 
     cd /opt/perforce/servers/<YOUR SERVER NAME>/root && p4d
 
@@ -44,7 +46,7 @@ More realistically, you'll want to start the server in recovery mode. Use
 
     cd /opt/perforce/servers/<YOUR SERVER NAME>/root && p4d -n
 
-For additional debugging options you can also start the server with
+To start Perforce in "normal" mode but at maximum verbosity, connect as user root and from any path run
 
     p4dctl -v 9 start <YOUR SERVER NAME> 
 
@@ -52,12 +54,10 @@ This forces more useful p4dctl messages.
 
 ## Depots
 
-Place all depots in /opt/perforce/depots/ in the container, this will cause them to be placed in the corresponding depots volume. Do NOT place them in the core perforce folder, Perforce will let you do this, but the resulting depot will behave strangely, such as writing all files under-the-hood in archive mode.
-
-Note that you will have to manually set filesystem permissions on your depot volume, Perforce will not do this for you.
+All depot files and directories must be owned by user `perforce`, failing to do this will cause submits and p4 verify on those paths to fail. Note that p4 verify fails with a "file missing" error on permission errors.
 
 ## SSL
 
-SSL certificates are automatically created by Perforce in the core/root/ssl directory. Because the core directory is always volume mounted, these certifcates will persist and you don't have to do anything special to get SSL to work. The container's start script will always force the correct permissions on this directory.
+TL;DR : Do not change SSL certificate settings unless you absolutely have to.
 
-You can volume map any arbitrary directory with certificates into your container, but the directory should always map to core/root/ssl inside the container, even if you set the P4SSLDIR variable. This seems to be a quirk with Perforce in Docker.
+SSL certificates are automatically created by Perforce in the core/root/ssl directory. You can place your own cerificates here too. The SSL directory should be owned by perforce with chmod 700, and SSL files should also be owned by user peforce with chmod 600. Having less restrictive permissions will cause Perforce to fail to start with a "certicates too open" error, and having these files owned by another user (like root), or trying to start the server with pd4 when logged in as root, will give an "effective user doesn't own certifcates" error.

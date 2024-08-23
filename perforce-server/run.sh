@@ -56,13 +56,13 @@ fi
 
 # force ownership of journals dir
 JOURNALS_DIR=$SERVERS_ROOT/$SERVER_NAME/journals
-if [ -d $LOGS_DIR ]; then
+if [ -d $JOURNALS_DIR ]; then
     echo "Claiming ownership of journals dir $JOURNALS_DIR"
     chown perforce -R $JOURNALS_DIR
     chgrp perforce -R $JOURNALS_DIR
     chmod 700 -R $JOURNALS_DIR
 else
-    echo "Logs dir $JOURNALS_DIR not found, cannot claim"
+    echo "Journals dir $JOURNALS_DIR not found, cannot claim"
 fi
 
 if [ $START_MODE = "idle" ] ; then
@@ -102,16 +102,13 @@ else
 
         echo "Server info:"
         p4 -p $P4PORT info
-        # container exits intentionally at this point, and gets reset, at which point it proceeds to either maintenance or normal mode
+        # container exits intentionally at this point, and gets reset, at which point it proceeds to either idle or normal mode
 
         # copy config to mirror location so available for external use
         cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
     fi
 
-    if [ $START_MODE = "maintenance" ] ; then
-        echo "Starting Perforce daemon in maintenance mode"
-        cd /opt/perforce/servers/$SERVER_NAME/root && p4d -n
-    else
+    if [ $START_MODE = "normal" ] ; then
         # Configuring the server also starts it, if we've not just configured a
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME
