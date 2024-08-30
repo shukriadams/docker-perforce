@@ -9,13 +9,20 @@ CONFIG_ROOT=/etc/perforce/p4dctl.conf.d
 
 # These vars need to be defined
 if [ -z "$SERVER_NAME" ]; then
-    echo FATAL: SERVER_NAME not defined 1>&2
+    echo ERROR: SERVER_NAME not defined 1>&2
     exit 1;
 fi
 
 if [ -z "$P4PASSWD" ]; then
-    echo FATAL: P4PASSWD not defined 1>&2
+    echo ERROR: P4PASSWD not defined 1>&2
     exit 1;
+fi
+
+# ensure current user is root, P4 will check this too, but only on initial server setup. This is for consistency, 
+# and to prevent container starting as another user (which can break files)
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR : This script (and by extension this container) must be run as root. Exiting ..."
+    exit 1
 fi
 
 # Default values
@@ -27,6 +34,23 @@ if [ -z "$START_MODE" ]; then
     echo "START_MODE defaulting to normal"
     START_MODE="normal"
 fi
+
+# ensure that start mode is normal if server is not set up yet
+if [ $START_MODE != "normal" ]; then
+
+    if [ ! -d $SERVER_ROOT/root ]; then
+        echo "Start mode must be normal (or blank) on initial container setup. The container needs to create server files before it can be restarted in another mode."
+        exit 1
+    fi
+
+    DB_COUNT=$(ls -1q $SERVER_ROOT/root/db.* | wc -l)
+    if [ $DB_COUNT -eq 0 ]; then
+        echo "ERROR : start mode must be normal (or left blank) on initial container setup. The container needs to create server files before it can be restarted in another mode."
+        exit 1
+    fi
+fi
+
+
 
 # force take ownership of ssl dir, this is needed when passing in from docker mount
 if [ ! -z "$P4SSLDIR" ]; then
@@ -67,12 +91,13 @@ fi
 
 if [ $START_MODE = "idle" ] ; then
     echo "Container running in idle mode. Perforce has not been started."
+    echo "You can manually start Perforce by connecting as root and running p4ctl, or as perforce and running p4d."
     /bin/sh -c "while true ;sleep 5; do continue; done"
 else
 
-    # Check if the server was configured and if root dir exists. If not either, configure it.
-    if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ] || [ ! -d $SERVER_ROOT/root ]; then
-        echo Perforce server $SERVER_NAME not configured, configuring.
+    # Check if root dir exists. If not either, configure it.
+    if [ ! -d $SERVER_ROOT/root ]; then
+        echo "Perforce server $SERVER_NAME not configured, configuring."
 
         if [ "$UNICODE" = "true" ]; then
             echo "Unicode mode enabled"
@@ -104,11 +129,21 @@ else
         p4 -p $P4PORT info
         # container exits intentionally at this point, and gets reset, at which point it proceeds to either idle or normal mode
 
-        # copy config to mirror location so available for external use
+        # copy config to mirror location so available for external use.
         cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
     fi
 
-    if [ $START_MODE = "normal" ] ; then
+    if [ $START_MODE = "maintenance" ] ; then
+
+        echo "Starting Perforce server in maintenance mode as user perforce"
+        
+        cd /opt/perforce/servers/$SERVER_NAME/root
+        
+        runuser -u perforce -- p4d -n
+
+    elif [ $START_MODE = "normal" ] ; then
+
+        echo "Starting Perforce server in normal mode"
         # Configuring the server also starts it, if we've not just configured a
         # server, we need to start it ourselves.
         p4dctl start $SERVER_NAME
@@ -116,5 +151,6 @@ else
         # Pipe server log and wait until the server dies
         PID_FILE=/var/run/p4d.$SERVER_NAME.pid
         exec /usr/bin/tail --pid=$(cat $PID_FILE) -n 0 -f "$SERVER_ROOT/logs/log"
+
     fi
 fi
