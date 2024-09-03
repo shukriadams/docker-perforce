@@ -139,7 +139,7 @@ else
         
         cd /opt/perforce/servers/$SERVER_NAME/root
         
-        runuser -u perforce -- p4d -n
+        runuser -u perforce -- p4d -p $P4PORT -n
 
     elif [ $START_MODE = "normal" ] ; then
 
