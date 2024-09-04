@@ -27,7 +27,7 @@ services:
       UNICODE: "true"
       CASE_SENSITIVE: "false"
       # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.
-      # START_MODE: maintenance
+      # MODE: maintenance
       TZ: Etc/UTC
     ports:
     - "1666:1666"

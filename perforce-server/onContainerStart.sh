@@ -1,23 +1,6 @@
 #!/bin/bash
 set -e
 
-# Perforce paths
-CONFIGURE_SCRIPT=/opt/perforce/sbin/configure-perforce-server.sh
-SERVERS_ROOT=/opt/perforce/servers
-CONFIG_ROOT=/etc/perforce/p4dctl.conf.d
-
-
-# These vars need to be defined
-if [ -z "$SERVER_NAME" ]; then
-    echo ERROR: SERVER_NAME not defined 1>&2
-    exit 1;
-fi
-
-if [ -z "$P4PASSWD" ]; then
-    echo ERROR: P4PASSWD not defined 1>&2
-    exit 1;
-fi
-
 # ensure current user is root, P4 will check this too, but only on initial server setup. This is for consistency, 
 # and to prevent container starting as another user (which can break files)
 if [[ $EUID -ne 0 ]]; then
@@ -25,18 +8,29 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Server name is always required
+if [ -z "$SERVER_NAME" ]; then
+    echo ERROR: SERVER_NAME not defined 1>&2
+    exit 1;
+fi
+
+# Perforce paths
+CONFIGURE_SCRIPT=/opt/perforce/sbin/configure-perforce-server.sh
+SERVERS_ROOT=/opt/perforce/servers
+CONFIG_ROOT=/etc/perforce/p4dctl.conf.d
+SERVER_ROOT=$SERVERS_ROOT/$SERVER_NAME
+
 # Default values
 P4USER=${P4USER:-p4admin}
 P4PORT=${P4PORT:-ssl:1666}
-SERVER_ROOT=$SERVERS_ROOT/$SERVER_NAME
 
-if [ -z "$START_MODE" ]; then
-    echo "START_MODE defaulting to normal"
-    START_MODE="normal"
+if [ -z "$MODE" ]; then
+    echo "MODE defaulting to normal"
+    MODE="normal"
 fi
 
-# ensure that start mode is normal if server is not set up yet
-if [ $START_MODE != "normal" ]; then
+# ensure that mode is normal if server is not set up yet
+if [ $MODE != "normal" ]; then
 
     if [ ! -d $SERVER_ROOT/root ]; then
         echo "Start mode must be normal (or blank) on initial container setup. The container needs to create server files before it can be restarted in another mode."
@@ -51,23 +45,8 @@ if [ $START_MODE != "normal" ]; then
 fi
 
 
-
-# force take ownership of ssl dir, this is needed when passing in from docker mount
-if [ ! -z "$P4SSLDIR" ]; then
-    if [ -d $P4SSLDIR ]; then
-        echo "Claiming ownership of SSL dir $P4SSLDIR"
-        chown perforce -R $P4SSLDIR 
-        chmod 700 $P4SSLDIR
-
-        # use -f and |: to ignore errors if dir empty
-        chmod -f 600 -R $P4SSLDIR/* |:
-    else
-        echo "Declared P4SSLDIR directory $P4SSLDIR does not exist, cannot claim"
-    fi
-fi
-
-# p4dctl runs as user perforce, therefore all dirs that Perforce writes to must be owned by user perforce
-# force ownership of logs dir
+# The actual perforce server process runs as user perforce, therefore all dirs that Perforce writes to must be owned by user perforce
+# Force ownership of logs dir
 LOGS_DIR=$SERVERS_ROOT/$SERVER_NAME/logs
 if [ -d $LOGS_DIR ]; then
     echo "Claiming ownership of logs dir $LOGS_DIR"
@@ -76,6 +55,17 @@ if [ -d $LOGS_DIR ]; then
     chmod 700 -R $LOGS_DIR
 else
     echo "Logs dir $LOGS_DIR not found, cannot claim"
+fi
+
+# force ownership of archives dir
+ARCHIVES_DIR=$SERVERS_ROOT/$SERVER_NAME/archives
+if [ -d $ARCHIVES_DIR ]; then
+    echo "Claiming ownership of archives dir $ARCHIVES_DIR"
+    chown perforce -R $ARCHIVES_DIR
+    chgrp perforce -R $ARCHIVES_DIR
+    chmod 700 -R $ARCHIVES_DIR
+else
+    echo "Archives dir $ARCHIVES_DIR not found, cannot claim"
 fi
 
 # force ownership of journals dir
@@ -89,15 +79,51 @@ else
     echo "Journals dir $JOURNALS_DIR not found, cannot claim"
 fi
 
-if [ $START_MODE = "idle" ] ; then
+# force ownership of database directory
+ROOT_DIR=$SERVERS_ROOT/$SERVER_NAME/root
+if [ -d $ROOT_DIR ]; then
+    echo "Claiming ownership of root dir $ROOT_DIR"
+    chown perforce -R $ROOT_DIR
+    chgrp perforce -R $ROOT_DIR
+    chmod 700 -R $ROOT_DIR
+else
+    echo "Root dir $ROOT_DIR not found, cannot claim"
+fi
+
+# force take ownership of ssl dir, this is needed when passing in from docker mount
+if [ -z "$P4SSLDIR" ]; then
+    SSL_DIR_TEMP=$P4SSLDIR
+else
+    # assume default location of ssl
+    SSL_DIR_TEMP=$SERVERS_ROOT/$SERVER_NAME/root/ssl
+    echo "P4SSLDIR not set, assuming default location at $SSL_DIR_TEMP"
+fi
+
+if [ -d $SSL_DIR_TEMP ]; then
+    echo "Claiming ownership of SSL dir $SSL_DIR_TEMP"
+    chown perforce -R $SSL_DIR_TEMP
+    chmod 700 $SSL_DIR_TEMP
+
+    # use -f and |: to ignore errors if dir empty
+    chmod -f 600 -R $SSL_DIR_TEMP/* |:
+else
+    echo "Declared P4SSLDIR directory $SSL_DIR_TEMP does not exist, cannot claim"
+fi
+
+if [ $MODE = "idle" ] ; then
     echo "Container running in idle mode. Perforce has not been started."
     echo "You can manually start Perforce by connecting as root and running p4ctl, or as perforce and running p4d."
     /bin/sh -c "while true ;sleep 5; do continue; done"
 else
 
-    # Check if root dir exists. If not either, configure it.
-    if [ ! -d $SERVER_ROOT/root ]; then
+    # Check if config or root dir exists. If not either, configure it.
+    if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ] || [ ! -d $SERVER_ROOT/root ]; then
         echo "Perforce server $SERVER_NAME not configured, configuring."
+
+        if [ -z "$P4PASSWD" ]; then
+            echo ERROR: P4PASSWD not defined 1>&2
+            exit 1;
+        fi
 
         if [ "$UNICODE" = "true" ]; then
             echo "Unicode mode enabled"
@@ -133,7 +159,7 @@ else
         cp -R /etc/perforce /opt/perforce/servers/$SERVER_NAME/config-mirror
     fi
 
-    if [ $START_MODE = "maintenance" ] ; then
+    if [ $MODE = "maintenance" ] ; then
 
         echo "Starting Perforce server in maintenance mode as user perforce"
         
@@ -141,7 +167,7 @@ else
         
         runuser -u perforce -- p4d -p $P4PORT -n
 
-    elif [ $START_MODE = "normal" ] ; then
+    elif [ $MODE = "normal" ] ; then
 
         echo "Starting Perforce server in normal mode"
         # Configuring the server also starts it, if we've not just configured a
