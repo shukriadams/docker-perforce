@@ -6,26 +6,31 @@ services:
     container_name: perforce
     restart: unless-stopped
     volumes:
-      # core is where perforce's own files live. Never put depots in this. The name "myserver" MUST match SERVER_NAME env var
+      # core is where perforce's own files live. Never put depots in this. 
+      # The name "myserver" MUST match SERVER_NAME env var
       - ./core:/opt/perforce/servers/myserver/:rw
-      # Put depots in here by default. In P4Admin place your depot in /opt/perforce/depots/[your-depot-name-here]
+      # Put depots in here by default. 
+      # In P4Admin place your depot in /opt/perforce/depots/[your-depot-name-here]
       - ./depots:/opt/perforce/depots/:rw
-      # expose triggers if wanted
-      - ./triggers:/opt/perforce/triggers/:rw
+      # Do not mount this volume path to an empty directory. The container must run at least once without
+      # this mount to properly generate requried files. You can find those files in core/config-mirror, copy
+      # them to a directory you want to mount, then restart your container mounting it.
+      # - ./config/:/etc/perforce/:rw
     environment:
       # server name MUST match the name of the internal data volume folder above
       SERVER_NAME : myserver
-      # use "1666" to skip ssl
-      P4PORT : ssl::1666
+      P4PORT : ssl::1666  # use "1666" to skip ssl
       P4USER : perforce
       P4PASSWD : Mypassword1
+      # must be defined, must be inside root/ssl, p4's ssl config is a brittlemess just accept it and move on
+      P4SSLDIR: /opt/perforce/servers/myserver/root/ssl 
       UNICODE: "true"
-      CASE_SENSITIVE: "false"      
+      CASE_SENSITIVE: "false"
       # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.
       # START_MODE: maintenance
       TZ: Etc/UTC
+    ports:
+    - "1666:1666"
     # using host machine network is recommended for performance reasons
-    network_mode: "host"  
-    # enable this if not using network_mode: "host"  
-    #ports:
-    #- "1666:1666"
+    network_mode: "host"        
+

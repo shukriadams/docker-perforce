@@ -11,10 +11,7 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     # Get perforce packages
     wget -q http://package.perforce.com/perforce.pubkey -O - | apt-key add - && \
     echo 'deb http://package.perforce.com/apt/ubuntu bionic release' > /etc/apt/sources.list.d/perforce.sources.list && \
-    # clean up the layer.
-    rm -rf /var/log/* \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get update && \
+    # install additional requirements
     apt-get install curl -y && \
     apt-get install nano -y && \
     export EDITOR=/bin/nano && \
@@ -27,8 +24,8 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     # set permissions
     usermod -aG root perforce && \
     chown -R perforce /opt/perforce && \
-    # force p4 trust for root user session
-    echo "p4 trust -yf" >> /root/.bashrc && \
+    # force p4 trust for all users on container
+    echo "p4 trust -yf" >> /etc/profile && \
     # clean temporary files
     rm /tmp/helix-base.deb && \
     rm /tmp/helix.deb && \ 
@@ -40,5 +37,5 @@ VOLUME /opt/perforce/servers
 VOLUME /opt/perforce/triggers
 
 # Add startup file and run it by default
-COPY run.sh /
-CMD ["/run.sh"]
+COPY onContainerStart.sh /opt/perforce/onContainerStart.sh
+CMD ["/opt/perforce/onContainerStart.sh"]
