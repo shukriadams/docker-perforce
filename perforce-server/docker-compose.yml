@@ -4,31 +4,54 @@ version: "2"
 services:
   perforce:
     image: shukriadams/perforce-server:latest-2020
-    container_name: perforce-test
+    container_name: myperforce
     restart: unless-stopped
     volumes:
+      
       # core is where perforce's own files live. Never put depots in this. 
-      # The name "myserver" MUST match SERVER_NAME env var
-      - ./../tmp/core:/opt/perforce/servers/myserver/:rw
+      # The name "MYSERVER" MUST match SERVER_NAME env var
+      - ./../tmp/core:/opt/perforce/servers/MYSERVER/:rw
+
       # Put depots in here by default. 
-      # In P4Admin place your depot in /opt/perforce/depots/[your-depot-name-here]
-      - ./../tmp/depots:/opt/perforce/depots/:rw
-      # Do not mount this volume path to an empty directory. The container must run at least once without
-      # this mount to properly generate requried files. You can find those files in core/config-mirror, copy
-      # them to a directory you want to mount, then restart your container mounting it.
-      - ./config/:/etc/perforce/:rw
+      # When creating depots in P4Admin, nest each depot under this, egs: /opt/perforce/depots/MYDEPOT
+      - ./depots:/opt/perforce/depots/:rw
+
+      # DO NOT mount at an empty directory to this location, you will break your server. 
+      # To get mountable config files, run your container once, this will generate config files and copy
+      # them to ./core/config-mirror. Perforce ignores this copy, but you can copy them out to a 
+      # directory of your choice, then enable this mount and at that directory.
+      # - ./config/:/etc/perforce/:rw
+
     environment:
       # server name MUST match the name of the internal data volume folder above
-      SERVER_NAME : myserver
-      P4PORT : ssl::1666  # use "1666" to skip ssl
-      P4USER : perforce
-      P4PASSWD : Mypassword1
-      # must be defined, must be inside root/ssl, p4's ssl config is a brittlemess just accept it and move on
-      P4SSLDIR: /opt/perforce/servers/myserver/root/ssl 
+      SERVER_NAME : MYSERVER
+
+      # to disbale SSL use only "1666"
+      P4PORT : ssl::1666    
+
+      # used once when creating the admin p4user. After that, ignored.
+      P4USER : perforce     
+
+      # used once when creating the admin p4user. After that, ignored.
+      P4PASSWD : Mypassword1 
+
+      # must be defined, and must be in absolute server root dir
+      P4SSLDIR: /opt/perforce/servers/MYSERVER/root/ssl 
+
+      # used once when setting up server
       UNICODE: "true"
+
+      # used once when setting up server
       CASE_SENSITIVE: "false"
-      # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.
-      # MODE: idle
+
+      # if you want to set timezone on your container
       TZ: Etc/UTC
+
+      # Allowed values : idle|maintenance
+      # If blank, commented out or set to any other value, server will run in normal mode.
+      # See onContainerStart.sh for how mode is used.
+      # Note thatn when creating a new container instance, MODE cannot be "idle", as this will block the creation of default container content.
+      # MODE: idle|maintenance
+
     ports:
     - "1666:1666"
