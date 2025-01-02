@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     # install additional requirements
     apt-get install curl -y && \
     apt-get install nano -y && \
-    export EDITOR=/bin/nano && \
     apt-get install python3-minimal -y && \
     apt-get install python3-pip -y && \ 
     curl https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/helix-p4d-base_2020.1-2298664~bionic_amd64.deb -o /tmp/helix-base.deb && \
@@ -30,7 +29,12 @@ RUN apt-get update && apt-get install -y wget gnupg2 && \
     rm /tmp/helix-base.deb && \
     rm /tmp/helix.deb && \ 
     rm -rf /var/log/* && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    # quality-of-life improvements, replace vi with nano, and force trust + login.
+    echo "export EDITOR=/bin/nano" >> /etc/bash.bashrc && \
+    echo "p4 trust -yf" >> /etc/bash.bashrc && \
+    echo "echo \$P4PASSWD | p4 login" >> /etc/bash.bashrc 
+
 
 # Volumes for server roots and triggers
 VOLUME /opt/perforce/servers
