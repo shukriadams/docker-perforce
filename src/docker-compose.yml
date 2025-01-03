@@ -25,6 +25,7 @@ services:
       P4PASSWD : Mypassword1
       # must be defined, must be inside root/ssl, p4's ssl config is a brittlemess just accept it and move on
       P4SSLDIR: /opt/perforce/servers/myserver/root/ssl 
+      FORCE_TRUST_AUTH: "true"
       UNICODE: "true"
       CASE_SENSITIVE: "false"
       # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.

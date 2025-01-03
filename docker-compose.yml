@@ -29,20 +29,24 @@ services:
       # to disbale SSL use only "1666"
       P4PORT : ssl::1666    
 
-      # used once when creating the admin p4user. After that, ignored.
+      # admin user name
       P4USER : myadmin     
 
-      # used once when creating the admin p4user. After that, ignored.
+      # admin user password
       P4PASSWD : Mypassword1 
 
       # must be defined, and must be in absolute server root dir
       P4SSLDIR: /opt/perforce/servers/MYSERVER/root/ssl 
+
 
       # used once when setting up server
       UNICODE: "true"
 
       # used once when setting up server
       CASE_SENSITIVE: "false"
+
+      # "true|false". If true, all shell sessions into container will automatically have p4 trust enabled, and auth with P4USER/P4PASSWD
+      FORCE_TRUST_AUTH: "true"
 
       # if you want to set timezone on your container
       TZ: Etc/UTC
