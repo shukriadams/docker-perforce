@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: builds
-        run: cd src && sh ./build.sh --build --test --push
+        run: cd src && sh ./build.sh --build --test --push -github-compose
         env:
             DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
             DOCKER_USER: ${{ secrets.DOCKER_USER }}
