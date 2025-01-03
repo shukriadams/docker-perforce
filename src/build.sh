@@ -46,8 +46,8 @@ fi
 if [ $DOCKERPUSH -eq 1 ]; then
     TAG=$(git describe --tags --abbrev=0) 
     docker login -u $DOCKER_USER -p $DOCKER_PASS 
-    docker tag shukriadams/perforce-server:latest-$BRANCH shukriadams/perforce-server:$BRANCH-$TAG 
-    docker push shukriadams/perforce-server:$BRANCH-$TAG
+    docker tag shukriadams/perforce-server:latest-$BRANCH shukriadams/perforce-server:$TAG 
+    docker push shukriadams/perforce-server:$TAG
     echo "Push complete"
 else
     echo "push to docker skipped, use --push to enable"
