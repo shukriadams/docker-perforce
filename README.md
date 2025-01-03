@@ -6,6 +6,31 @@ This container creates a fully-functional Perforce server with 5 client seats. Y
 
 Branch `2020` is for Perforce 2020, branch `2024` for Perforce 2024. This split is because I maintain two production versions of Perforce on these two versions, and I needed concurrent images for both.
 
+## Simple setup
+
+Start a bacsic server using the following compose
+
+    version: "2"
+    services:
+        perforce:
+            image: shukriadams/perforce-server:2020-0.0.2
+            volumes:
+            - ./core:/opt/perforce/servers/myserver/:rw
+            - ./depots:/opt/perforce/depots/:rw
+            environment:
+                SERVER_NAME : myserver
+                P4PORT : ssl::1666
+                P4USER : perforce
+                P4PASSWD : Mypassword1
+            ports:
+            - "1666:1666"
+
+This creates a server with default options. Connect to your server with P4 admin, create depots, streams and up to five users, then connect with your Perforce client of choice. Note the two volume mounts above. To wipe and recreate your server, stop the container, delete the two directories created by your container, then restart the container.
+    
+## Advance setup
+
+Refer to setup.md for detailed documentation.
+
 ## Volume mapping
 
 This project has an example docker-compose file that assumes the following volume mapping structure for your Perforce server. Your local (files on your container host system) should look like
@@ -99,7 +124,11 @@ This forces more useful p4dctl messages.
 
 All depot files and directories must be owned by user `perforce`, failing to do this will cause submits and p4 verify on those paths to fail. Note that p4 verify fails with a "file missing" error if it encounters a permission error.
 
-### On SSL
+### Ports
+
+Docker lets you remap exposed port numbers for a given container. Perforce however breaks if you do this, the port you externally access the container must be identical to the port the server listens at.
+
+### SSL
 
 TL;DR : Do not change SSL certificate settings unless you absolutely have to.
 
