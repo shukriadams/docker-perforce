@@ -24,7 +24,7 @@ SERVER_ROOT=$SERVERS_ROOT/$SERVER_NAME
 P4USER=${P4USER:-p4admin}
 P4PORT=${P4PORT:-ssl:1666}
 
-if [ -z "$MODE" ]; then
+if [ -z "${MODE}" ]; then
     echo "MODE defaulting to normal"
     MODE="normal"
 fi
@@ -91,12 +91,12 @@ else
 fi
 
 # force take ownership of ssl dir, this is needed when passing in from docker mount
-if [ -z "$P4SSLDIR" ]; then
-    SSL_DIR_TEMP=$P4SSLDIR
-else
+if [ -z "${P4SSLDIR}" ]; then
     # assume default location of ssl
     SSL_DIR_TEMP=$SERVERS_ROOT/$SERVER_NAME/root/ssl
     echo "P4SSLDIR not set, assuming default location at $SSL_DIR_TEMP"
+else
+    SSL_DIR_TEMP=$P4SSLDIR
 fi
 
 if [ -d $SSL_DIR_TEMP ]; then
@@ -120,7 +120,7 @@ else
     if [ ! -f $CONFIG_ROOT/$SERVER_NAME.conf ] || [ ! -d $SERVER_ROOT/root ]; then
         echo "Perforce server $SERVER_NAME not configured, configuring."
 
-        if [ -z "$P4PASSWD" ]; then
+        if [ -z "${P4PASSWD}" ]; then
             echo ERROR: P4PASSWD not defined 1>&2
             exit 1;
         fi
