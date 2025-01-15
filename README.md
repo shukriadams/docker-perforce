@@ -1,22 +1,24 @@
 # docker-perforce
 
-This is a Peforce server in an Ubuntu-based docker container. Container images are available @ https://hub.docker.com/r/shukriadams/perforce-server. This project started as a fork of https://github.com/noonien/docker-perforce-server, but is now indepedently maintained.
+A Peforce server in an Ubuntu-based docker container. Container images are available @ https://hub.docker.com/r/shukriadams/perforce-server. 
 
-This container creates a fully-functional Perforce server with 5 client seats. You can apply a license to this server if you wish. This is a production-quality container used at a game studio with 50+ developers, multiple depots, and many terabytes of data, and multiple container instances.
+Spins up a fully-functional Perforce server with 5 client seats. A Perfoce license can be added to support more users. This is a production-quality container used at a game studio with 50+ developers, multiple depots, many terabytes of data, and multiple container instances.
+
+This container adds a few quality-of-life features to Perforce to make it easier to create and manage servers.
 
 Branch `2020` is for Perforce 2020, branch `2024` for Perforce 2024. This split is because I maintain two production versions of Perforce on these two versions, and I needed concurrent images for both.
 
 ## Simple setup
 
-Start a bacsic server using the following compose
+Start a basic server using the following compose 
 
     version: "2"
     services:
         perforce:
-            image: shukriadams/perforce-server:2020-0.0.2
+            image: shukriadams/perforce-server:2020-<latest-increment-here>
             volumes:
-            - ./core:/opt/perforce/servers/myserver/:rw
-            - ./depots:/opt/perforce/depots/:rw
+            - ./core : /opt/perforce/servers/myserver/:rw
+            - ./depots : /opt/perforce/depots/:rw
             environment:
                 SERVER_NAME : myserver
                 P4PORT : ssl::1666
@@ -25,11 +27,11 @@ Start a bacsic server using the following compose
             ports:
             - "1666:1666"
 
-This creates a server with default options. Connect to your server with P4 admin, create depots, streams and up to five users, then connect with your Perforce client of choice. Note the two volume mounts above. To wipe and recreate your server, stop the container, delete the two directories created by your container, then restart the container.
+This creates a server with default options. Connect to your server with P4 admin, create depots, streams and users, then connect with your Perforce client of choice. Note the two volume mounts, at a minimum, files in 'core' and 'depots' must persist outside your container. 
     
 ## Advance setup
 
-Refer to setup.md for detailed documentation.
+Refer to [setup.md](./SETUP.md) for detailed documentation.
 
 ## Volume mapping
 
@@ -165,3 +167,7 @@ Requires Docker runtime.
   sh ./build.sh
 
 Note that Perforce public binaries are constantly being updated, you will almost certainly have to udpate the pegged versions pulled from https://package.perforce.com/apt/ubuntu/pool/release/p/perforce/ in dockerfile for build to succeed. Browse to that URL and find a suitable version update.
+
+## Credits
+
+This project started as a fork of https://github.com/noonien/docker-perforce-server, but is now indepedently maintained.
