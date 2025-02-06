@@ -34,8 +34,8 @@ else
 fi
 
 if [ $SMOKETEST -eq 1 ]; then
-    $COMPOSE down
-    $COMPOSE up -d
+    $COMPOSE -f docker-compose-buildtest.yml down
+    $COMPOSE -f docker-compose-buildtest.yml up -d
     sleep 5
     docker logs perforce-test
     echo "test complete, note that this script doesn't yet read for explicit pass flag from container logs"

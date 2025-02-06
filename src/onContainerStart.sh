@@ -153,6 +153,23 @@ else
 
         echo "Server info:"
         p4 -p $P4PORT info
+
+        if [ -z "${FORCE_ADMIN_GROUP}" ]; then
+            echo "Ignore forced admin group"
+        else
+            printf "Group: $FORCE_ADMIN_GROUP\n" > /tmp/p4group
+            printf "Owners: $P4USER\n" >> /tmp/p4group
+    
+            if [ "$FORCE_ADMIN_NOEXPIRE" == "true" ]; then
+                printf "Timeout: unlimited\n" >> /tmp/p4group
+                printf "PasswordTimeout: unlimited\n" >> /tmp/p4group
+                echo "Forcing unlimited password and ticket on group $FORCE_ADMIN_GROUP"
+            fi
+
+            cat /tmp/p4group | p4 group -i
+            rm /tmp/p4group
+        fi
+
         # container exits intentionally at this point, and gets reset, at which point it proceeds to either idle or normal mode
 
         # copy config to mirror location so available for external use.

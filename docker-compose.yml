@@ -10,7 +10,7 @@ services:
       
       # core is where perforce's own files live. Never put depots in this. 
       # The name "MYSERVER" MUST match SERVER_NAME env var
-      - ./../tmp/core:/opt/perforce/servers/MYSERVER/:rw
+      - ./core:/opt/perforce/servers/MYSERVER/:rw
 
       # Put depots in here by default. 
       # When creating depots in P4Admin, nest each depot under this, egs: /opt/perforce/depots/MYDEPOT
@@ -47,6 +47,12 @@ services:
 
       # "true|false". If true, all shell sessions into container will automatically have p4 trust enabled, and auth with P4USER/P4PASSWD
       FORCE_TRUST_AUTH: "true"
+
+      # if set, a group by this name will be created on container create, and p4user will be added to it
+      FORCE_ADMIN_GROUP: admins
+
+      # if true, the FORCE_ADMIN_GROUP above will have its ticket lifespan set to "unlimited"
+      FORCE_ADMIN_NOEXPIRE: true
 
       # if you want to set timezone on your container
       TZ: Etc/UTC

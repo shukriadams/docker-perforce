@@ -28,6 +28,8 @@ services:
       FORCE_TRUST_AUTH: "true"
       UNICODE: "true"
       CASE_SENSITIVE: "false"
+      FORCE_ADMIN_GROUP: admins
+      FORCE_ADMIN_NOEXPIRE: true
       # When creating a new container instance, do not set START_MODE to idle. Idle blocks the creation of default container content.
       # MODE: idle
       TZ: Etc/UTC
