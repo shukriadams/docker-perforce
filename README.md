@@ -28,11 +28,31 @@ Start a basic server using the following compose
             - "1666:1666"
 
 This creates a server with default options. Connect to your server with P4 admin, create depots, streams and users, then connect with your Perforce client of choice. Note the two volume mounts, at a minimum, files in 'core' and 'depots' must persist outside your container. 
-    
+  
 ## Advance setup
 
 Refer to [setup.md](./SETUP.md) for detailed documentation.
 
+## Typical Server Functions
+
+### Interacting with server process
+
+- shell into container
+
+        docker exec -it -u perfoce MYCONTAINER bash
+
+- get a list of Perforce servers
+
+        p4dctl list
+
+- Stop a server (keeps container running)
+
+        p4dctl stop MYSERVER
+  
+- Start server
+ 
+        p4dctl start MYSERVER
+  
 ## Volume mapping
 
 This project has an example docker-compose file that assumes the following volume mapping structure for your Perforce server. Your local (files on your container host system) should look like
